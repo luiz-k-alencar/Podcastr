@@ -1,0 +1,10 @@
+{
+	"className": {
+		"scope": "javascript,typescript",
+		"prefix": "-class",
+		"body": [
+			"className={}",
+		],
+		"description": "creates a new class"
+	}
+}
