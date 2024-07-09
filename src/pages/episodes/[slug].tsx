@@ -1,6 +1,7 @@
 import { convertDurationToTimeString } from "../../utils/convertDurationToTimeString";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { format, parseISO } from "date-fns";
+import episodesData from "../../data/server.json";
 import styles from "./episode.module.scss";
 import { api } from "../../services/api";
 import { ptBR } from "date-fns/locale";
@@ -68,17 +69,8 @@ export default function Episode({ episode }: EpisodeProps) {
     </div>
   );
 }
-
 export const getStaticPaths: GetStaticPaths = async () => {
-  const { data } = await api.get("episodes", {
-    params: {
-      _limit: 12,
-      _sort: "published_at",
-      _order: "desc",
-    },
-  });
-
-  const paths = data.map((episode) => {
+  const paths = episodesData.episodes.map((episode) => {
     return {
       params: {
         slug: episode.id,
@@ -94,27 +86,28 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps = async (ctx) => {
   const { slug } = ctx.params;
+  const episode = episodesData.episodes.find((ep) => ep.id === slug);
 
-  const { data } = await api.get(`/episodes/${slug}`);
-
-  const episode = {
-    id: data.id,
-    title: data.title,
-    thumbnail: data.thumbnail,
-    members: data.members,
-    publishedAt: format(parseISO(data.published_at), "d MMM yy", {
+  const formattedEpisode = {
+    id: episode.id,
+    title: episode.title,
+    thumbnail: episode.thumbnail,
+    members: episode.members,
+    publishedAt: format(parseISO(episode.published_at), "d MMM yy", {
       locale: ptBR,
     }),
-    duration: Number(data.file.duration),
-    durationAsString: convertDurationToTimeString(Number(data.file.duration)),
-    description: data.description,
-    url: data.file.url,
+    duration: Number(episode.file.duration),
+    durationAsString: convertDurationToTimeString(
+      Number(episode.file.duration)
+    ),
+    description: episode.description,
+    url: episode.file.url,
   };
 
   return {
     props: {
-      episode,
+      episode: formattedEpisode,
     },
-    revalidate: 60 * 60 * 24, //24 hours
+    revalidate: 60 * 60 * 24, // 24 hours
   };
 };
